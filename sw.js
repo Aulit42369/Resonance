@@ -1,6 +1,6 @@
 // Service worker de Résonance : met tout le jeu en cache pour qu'il fonctionne hors ligne.
 // Change VERSION à chaque mise à jour du jeu pour que les joueurs reçoivent la nouvelle version.
-const VERSION = 'resonance-1.1.0';
+const VERSION = 'resonance-1.1.1';
 const FILES = [
   "./",
   "index.html",
@@ -39,10 +39,10 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
-  if (req.mode === 'navigate') {
+  if (req.mode === 'navigate' || new URL(req.url).pathname.endsWith('manifest.webmanifest')) {
     e.respondWith(
-      fetch(req).then(res => { const copy = res.clone(); caches.open(VERSION).then(c => c.put('./', copy)); return res; })
-        .catch(() => caches.match('./').then(r => r || caches.match('index.html')))
+      fetch(req).then(res => { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req.mode === 'navigate' ? './' : req, copy)); return res; })
+        .catch(() => caches.match(req.mode === 'navigate' ? './' : req).then(r => r || caches.match('index.html')))
     );
     return;
   }
